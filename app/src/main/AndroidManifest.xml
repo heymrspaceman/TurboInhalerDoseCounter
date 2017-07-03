@@ -24,6 +24,10 @@
                 <data android:mimeType="application/tsdcsv"/>
             </intent-filter>
         </activity>
+        <activity android:name=".DoseTakenActivity"></activity>
+        <activity android:name=".MissedDoseActivity"></activity>
+        <activity android:name=".HistoryActivity"></activity>
+        <activity android:name=".HistoryActivity2"></activity>
     </application>
 
 </manifest>

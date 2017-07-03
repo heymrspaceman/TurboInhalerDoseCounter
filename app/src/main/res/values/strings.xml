@@ -1,3 +1,18 @@
 <resources>
     <string name="app_name">TurboInhaler Dose Counter</string>
+    <string name="edit_message">Enter a message</string>
+    <string name="button_take_dose">Take dose</string>
+    <string name="button_missed_dose">Missed dose</string>
+    <string name="button_history">History</string>
+    <string name="button_import_data">Import data</string>
+    <string name="button_export_data">Export data</string>
+    <string name="timer_info_message">Do not take another dose until</string>
+    <string name="timer_message">\%%d:\%%02d</string>
+    <string name="timer_message_default">0:00</string>
+    <string name="dose_message">Doses today: \%%d</string>
+    <string name="dose_message_info">Doses today: \%%d</string>
+    <string name="dose_message_with_24hour">Doses today: \%%d (\%%d in last 24hr)</string>
+    <string name="safe_dose_message">Safe to take another dose</string>
+    <string name="last_dose_message">Last dose: \%%s</string>
+    <string name="dose_summary_message">\%%s</string>
 </resources>
