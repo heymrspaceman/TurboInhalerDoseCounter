@@ -4,12 +4,14 @@ import android.Manifest;
 import android.app.DownloadManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Uri data = getIntent().getData();
-        if(data!=null) {
+        if (data != null) {
             getIntent().setData(null);
             importIntentData(data);
         }
@@ -52,13 +54,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onResume()
-    {  // After a pause OR at startup
+    public void onResume() {  // After a pause OR at startup
         super.onResume();
         RefreshDoses();
     }
 
-    @Override public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE:
                 if ((grantResults.length > 0) && (grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 }
         }
     }
+
     private void importIntentData(Uri data) {
         // Produce summary of the data -
         //132 doses from 4/2/2017 - 3/5/2017 (140 doses) Do you wish to import?
@@ -88,6 +91,29 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 is.close();
+
+                if (buf.length() > 0) {
+                    final String[] doses = buf.toString().split(File.separator);
+
+                    if (doses.length == 0) {
+                        Toast.makeText(getApplicationContext(), R.string.no_import_data, Toast.LENGTH_SHORT).show();
+                    } else {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setMessage(String.format(getString(R.string.import_data_message), doses.length));
+                        builder.setPositiveButton(R.string.yes_dialog_button, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                doseRecorderDb.importDosesCSV(doses);
+                            }
+                        });
+                        builder.setNegativeButton((R.string.no_dialog_button), new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                Toast.makeText(getApplicationContext(), R.string.import_cancelled, Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                        AlertDialog dialog = builder.create();
+                        dialog.show();
+                    }
+                }
             } catch (FileNotFoundException fx) {
 
             } catch (IOException iox) {

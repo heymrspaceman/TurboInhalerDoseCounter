@@ -15,4 +15,9 @@
     <string name="safe_dose_message">Safe to take another dose</string>
     <string name="last_dose_message">Last dose: \%%s</string>
     <string name="dose_summary_message">\%%s</string>
+    <string name= "no_import_data">No data to import</string>
+    <string name= "import_cancelled">Data import cancelled</string>
+    <string name="import_data_message">Do you wish to import \%%d records</string>
+    <string name= "yes_dialog_button">yes</string>
+    <string name= "no_dialog_button">no</string>
 </resources>

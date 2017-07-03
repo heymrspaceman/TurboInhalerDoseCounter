@@ -68,6 +68,14 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
                 " VALUES (1, '" + startDate + " " + doseTime + "')");
     }
 
+    public void addMissedCount(String timestamp) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        db.execSQL("INSERT INTO " + DoseRecorderContract.Dose.TABLE_NAME +
+                " (" + DoseRecorderContract.Dose.COLUMN_NAME_COUNT + "," + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ")" +
+                " VALUES (1, '" + timestamp + "')");
+    }
+
     public int getDosesCount() {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor dosesCount = db.rawQuery("SELECT * FROM " + DoseRecorderContract.Dose.TABLE_NAME, null);
@@ -147,7 +155,7 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
                     String hourText = hourDoses.getString(0);
                     int count = hourDoses.getInt(1);
                     int hour = Integer.parseInt(hourText);
-                     // TODO BST conversion here
+                    // TODO BST conversion here
 
                     String formattedHour = "";
                     if ((hour >= 0) && (hour <= 12)) {
@@ -223,5 +231,16 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
         }
 
         return allDosesList;
+    }
+
+    public void importDosesCSV(String[] doses) {
+        for (int i = 0; i < doses.length; ++i) {
+            String[] doseSplit = doses[i].split(",");
+            if (doseSplit.length == 2) {
+                int doesValue = Integer.parseInt(doseSplit[0]);
+                String doseTimestamp = doseSplit[1];
+                addMissedCount(doseTimestamp);
+            }
+        }
     }
 }
