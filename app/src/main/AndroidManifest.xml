@@ -21,7 +21,8 @@
                 <data android:scheme="content"/>
                 <data android:scheme="file"/>
                 <data android:host="*"/>
-                <data android:mimeType="application/tsdcsv"/>
+                <data android:mimeType="application/octet-stream"/>
+                <!-- had to change this from tdccsv as when I downloaded file to new device it seen it as octet-stream rather than tdccsv-->
             </intent-filter>
         </activity>
         <activity android:name=".DoseTakenActivity"></activity>
