@@ -14,10 +14,6 @@ import java.util.TimeZone;
 
 public class DoseDateTime {
 
-    public DoseDateTime() {
-        InitialiseFormatter();
-    }
-
     public DoseDateTime(Date date, DoseTimeZone zone) {
         InitialiseFormatter();
         InitialiseDate(date, zone);
@@ -35,7 +31,7 @@ public class DoseDateTime {
     }
 
     private void InitialiseFormatter() {
-        m_format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        m_format = new SimpleDateFormat(FULL_DATE_FORMAT);
     }
 
     private void InitialiseDate(Date date, DoseTimeZone zone) {
@@ -56,7 +52,7 @@ public class DoseDateTime {
         Date convertedDate = date;
         try
         {
-            SimpleDateFormat formatterIn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            SimpleDateFormat formatterIn = new SimpleDateFormat(FULL_DATE_FORMAT);
             if (sourceZone == DoseTimeZone.Local) {
                 formatterIn.setTimeZone(TimeZone.getTimeZone("UTC"));
             } else {
@@ -82,12 +78,7 @@ public class DoseDateTime {
     }
 
     public String GetDateTimeText(DoseTimeZone zone) {
-        if (zone == DoseTimeZone.Local) {
-            Date localDate = ConvertTimeBetweenZones(m_date, DoseTimeZone.UTC, DoseTimeZone.Local);
-            return m_format.format(localDate);
-        } else {
-            return m_format.format(m_date);
-        }
+        return FormatText(zone, FULL_DATE_FORMAT);
     }
 
     public String GetHourMinuteText(DoseTimeZone zone) {
@@ -110,6 +101,7 @@ public class DoseDateTime {
     private SimpleDateFormat m_format;
     private Date m_date;
 
+    private static final String FULL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private static final String HOUR_FORMAT = "ha";
     private static final String HOUR_MINUTE_FORMAT = "h:mma";
 
