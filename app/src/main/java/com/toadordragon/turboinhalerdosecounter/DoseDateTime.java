@@ -52,16 +52,7 @@ public class DoseDateTime {
         return new DoseDateTime(calToday.getTime(), DoseTimeZone.UTC);
     }
 
-    public String GetDateTimeText(DoseTimeZone zone) {
-        if (zone == DoseTimeZone.Local) {
-            Date localDate = ConvertTimeBetweenZones(m_date, DoseTimeZone.UTC, DoseTimeZone.Local);
-            return m_format.format(localDate);
-        } else {
-            return m_format.format(m_date);
-        }
-    }
-
-    public static Date ConvertTimeBetweenZones(Date date, DoseTimeZone sourceZone, DoseTimeZone destZone) {
+    private Date ConvertTimeBetweenZones(Date date, DoseTimeZone sourceZone, DoseTimeZone destZone) {
         Date convertedDate = date;
         try
         {
@@ -90,26 +81,37 @@ public class DoseDateTime {
         return convertedDate;
     }
 
-    public String GetHourMinuteText(DoseTimeZone zone) {
-        Date convertedDate = m_date;
-        if (zone != DoseTimeZone.UTC) {
-            convertedDate = ConvertTimeBetweenZones(m_date, DoseTimeZone.UTC, zone);
+    public String GetDateTimeText(DoseTimeZone zone) {
+        if (zone == DoseTimeZone.Local) {
+            Date localDate = ConvertTimeBetweenZones(m_date, DoseTimeZone.UTC, DoseTimeZone.Local);
+            return m_format.format(localDate);
+        } else {
+            return m_format.format(m_date);
         }
-        String hourMinuteText = new SimpleDateFormat("h:mma").format(convertedDate);
-        return hourMinuteText.toLowerCase();
+    }
+
+    public String GetHourMinuteText(DoseTimeZone zone) {
+        return FormatText(zone, HOUR_MINUTE_FORMAT);
     }
 
     public String GetHourText(DoseTimeZone zone) {
+        return FormatText(zone, HOUR_FORMAT);
+    }
+
+    private String FormatText(DoseTimeZone zone, String dateFormat) {
         Date convertedDate = m_date;
         if (zone != DoseTimeZone.UTC) {
             convertedDate = ConvertTimeBetweenZones(m_date, DoseTimeZone.UTC, zone);
         }
-        String hourMinuteText = new SimpleDateFormat("ha").format(convertedDate);
+        String hourMinuteText = new SimpleDateFormat(dateFormat).format(convertedDate);
         return hourMinuteText.toLowerCase();
     }
 
     private SimpleDateFormat m_format;
     private Date m_date;
+
+    private static final String HOUR_FORMAT = "ha";
+    private static final String HOUR_MINUTE_FORMAT = "h:mma";
 
     public enum DoseTimeZone {
         Local,

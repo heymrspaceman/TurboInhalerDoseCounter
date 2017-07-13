@@ -59,4 +59,17 @@ public class DoseDateTimeUnitTest {
         assertEquals("2017-05-01 01:00:00", utcMay1st20171amUTC_2.GetDateTimeText(DoseDateTime.DoseTimeZone.UTC));
         assertEquals("2017-05-01 02:00:00", utcMay1st20171amUTC_2.GetDateTimeText(DoseDateTime.DoseTimeZone.Local));
     }
+
+    @Test
+    public void DoseDateTime_text() throws Exception {
+        String time1Text = "2011-07-20 02:30:02";
+        DoseDateTime time1 = new DoseDateTime(time1Text, DoseDateTime.DoseTimeZone.Local);
+        assertEquals("2:30am", time1.GetHourMinuteText(DoseDateTime.DoseTimeZone.Local));
+        assertEquals(time1Text, time1.GetDateTimeText(DoseDateTime.DoseTimeZone.Local));
+        String time2Text = "1977-01-01 15:43:44";
+        DoseDateTime time2 = new DoseDateTime(time2Text, DoseDateTime.DoseTimeZone.Local);
+        assertEquals("3:43pm", time2.GetHourMinuteText(DoseDateTime.DoseTimeZone.Local));
+        assertEquals("3pm", time2.GetHourText(DoseDateTime.DoseTimeZone.Local));
+        assertEquals(time2Text, time2.GetDateTimeText(DoseDateTime.DoseTimeZone.Local));
+    }
 }

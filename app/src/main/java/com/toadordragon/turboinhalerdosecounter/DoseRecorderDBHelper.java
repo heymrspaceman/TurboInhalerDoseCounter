@@ -60,7 +60,6 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
 
         db.execSQL("INSERT INTO " + DoseRecorderContract.Dose.TABLE_NAME +
                 " (" + DoseRecorderContract.Dose.COLUMN_NAME_COUNT + "," + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ")" +
-                // I need to put this in db as UTC
                 " VALUES (1, '" + doseTime.GetDateTimeText(DoseDateTime.DoseTimeZone.UTC) + "')");
     }
 
