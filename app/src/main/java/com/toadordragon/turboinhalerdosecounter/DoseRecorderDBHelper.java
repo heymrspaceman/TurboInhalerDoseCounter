@@ -44,36 +44,24 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
     }
 
     public void addCount() {
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        Calendar calToday = Calendar.getInstance();
-        Date doseTime = calToday.getTime();
-
-        String doseDatePart = new SimpleDateFormat("yyyy-MM-dd").format(doseTime);
-        String doseTimePart = new SimpleDateFormat("HH:mm:ss").format(doseTime);
-
-        db.execSQL("INSERT INTO " + DoseRecorderContract.Dose.TABLE_NAME +
-                " (" + DoseRecorderContract.Dose.COLUMN_NAME_COUNT + "," + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ")" +
-                " VALUES (1, '" + doseDatePart + " " + doseTimePart + "')");
+        addCount(DoseDateTime.Now());
     }
 
-    public void addMissedCount(Date missedTime) {
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        String startDate = new SimpleDateFormat("yyyy-MM-dd").format(missedTime);
-        String doseTime = new SimpleDateFormat("HH:mm:ss").format(missedTime);
-
-        db.execSQL("INSERT INTO " + DoseRecorderContract.Dose.TABLE_NAME +
-                " (" + DoseRecorderContract.Dose.COLUMN_NAME_COUNT + "," + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ")" +
-                " VALUES (1, '" + startDate + " " + doseTime + "')");
+    public void addMissedCount(Date missedDoseTime, DoseDateTime.DoseTimeZone timeZone) {
+        addCount(new DoseDateTime(missedDoseTime, timeZone));
     }
 
-    public void addMissedCount(String timestamp) {
+    public void addMissedCount(String missedDoseTimeText, DoseDateTime.DoseTimeZone timeZone) {
+        addCount(new DoseDateTime(missedDoseTimeText, timeZone));
+    }
+
+    public void addCount(DoseDateTime doseTime) {
         SQLiteDatabase db = this.getReadableDatabase();
 
         db.execSQL("INSERT INTO " + DoseRecorderContract.Dose.TABLE_NAME +
                 " (" + DoseRecorderContract.Dose.COLUMN_NAME_COUNT + "," + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ")" +
-                " VALUES (1, '" + timestamp + "')");
+                // I need to put this in db as UTC
+                " VALUES (1, '" + doseTime.GetDateTimeText(DoseDateTime.DoseTimeZone.UTC) + "')");
     }
 
     public int getDosesCount() {
@@ -151,20 +139,12 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
                 int doseCount = 0;
                 hourDoses.moveToFirst();
                 while (!hourDoses.isAfterLast()) {
-
-                    String hourText = hourDoses.getString(0);
+                    // Put the hour back into todays date
+                    String dateTimeText = startDate + " " + hourDoses.getString(0) + ":00:00";
+                    DoseDateTime doseDateTime = new DoseDateTime(dateTimeText, DoseDateTime.DoseTimeZone.UTC);
                     int count = hourDoses.getInt(1);
-                    int hour = Integer.parseInt(hourText);
-                    // TODO BST conversion here
 
-                    String formattedHour = "";
-                    if ((hour >= 0) && (hour <= 12)) {
-                        formattedHour = String.format("%dam", hour);
-                    } else {
-                        formattedHour = String.format("%dpm", hour - 12);
-                    }
-
-                    todayDoseTimes += String.format(" %s", formattedHour);
+                    todayDoseTimes += String.format(" %s", doseDateTime.GetHourText(DoseDateTime.DoseTimeZone.Local));
                     if (count > 1) {
                         todayDoseTimes += String.format("(%d)", count);
                     }
@@ -187,10 +167,9 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
         if (lastTimestamp != null) {
             if (lastTimestamp.moveToFirst()) {
                 String lastDoseText = lastTimestamp.getString(lastTimestamp.getColumnIndex(DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP));
-                NiceDate lastDose = new NiceDate(lastDoseText);
-
+                DoseDateTime lastDoseDateTime = new DoseDateTime(lastDoseText, DoseDateTime.DoseTimeZone.UTC);
                 // TODO Do I need to close these Cursors?
-                return lastDose.NiceFormat();
+                return lastDoseDateTime.GetHourMinuteText(DoseDateTime.DoseTimeZone.Local);
             }
         }
 
@@ -237,9 +216,9 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
         for (int i = 0; i < doses.length; ++i) {
             String[] doseSplit = doses[i].split(",");
             if (doseSplit.length == 2) {
-                int doesValue = Integer.parseInt(doseSplit[0]);
+                int doesValue = Integer.parseInt(doseSplit[0]); // always 1 currently
                 String doseTimestamp = doseSplit[1];
-                addMissedCount(doseTimestamp);
+                addMissedCount(doseTimestamp, DoseDateTime.DoseTimeZone.UTC);
             }
         }
     }
