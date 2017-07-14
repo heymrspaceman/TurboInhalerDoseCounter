@@ -76,6 +76,7 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
         return 0;
     }
 
+    // TODO move this out of database class
     public int getDosesTodayCount() {
         Calendar todayMidnightCal = Calendar.getInstance();
         todayMidnightCal.set(Calendar.HOUR_OF_DAY, 0);
@@ -89,11 +90,13 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
         return getDosesInRange(new DoseDateTime(todayMidnightCal), new DoseDateTime(tomorrowMidnightCal), todayMidnightCal.getTimeZone());
     }
 
+    // TODO move this out of database class
     public int getDoses24HoursCount() {
         Calendar nowCal = Calendar.getInstance();
 
         Calendar dayAgoCal = (Calendar)nowCal.clone();
         dayAgoCal.add(Calendar.DATE, -1);
+
         return getDosesInRange(new DoseDateTime(dayAgoCal), new DoseDateTime(nowCal), nowCal.getTimeZone());
     }
 
@@ -114,14 +117,20 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
 
     public String getTodayDoseTimes(Calendar cal) {
         SQLiteDatabase db = this.getReadableDatabase();
+
         Calendar calToday = Calendar.getInstance();
-        Calendar calTomorrow = Calendar.getInstance();
+
+        Calendar calTomorrow = (Calendar)calToday.clone();
         calTomorrow.add(Calendar.DATE, 1);
-        String startDate = new SimpleDateFormat("yyyy-MM-dd").format(calToday.getTime());
-        String endDate = new SimpleDateFormat("yyyy-MM-dd").format(calTomorrow.getTime());
+
+        DoseDateTime startDate = new DoseDateTime(calToday);
+        DoseDateTime endDate = new DoseDateTime(calTomorrow);
+        String startDateText = startDate.GetDateTimeText(calToday.getTimeZone());
+        String endDateText = startDate.GetDateTimeText(calToday.getTimeZone());
+
         String queryText = "SELECT strftime('%H', " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + "), " +
                 "COUNT(" + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ") FROM " + DoseRecorderContract.Dose.TABLE_NAME + " " +
-                "WHERE " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " between '" + startDate + "' and '" + endDate + "' " +
+                "WHERE " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " between '" + startDateText + "' and '" + endDateText + "' " +
                 "GROUP BY strftime('%Y-%m-%d %H:00:00', " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ")";
 
         String todayDoseTimes = "";
