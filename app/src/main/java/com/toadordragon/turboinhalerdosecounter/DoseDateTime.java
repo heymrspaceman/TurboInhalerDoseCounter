@@ -30,6 +30,11 @@ public class DoseDateTime {
         }
     }
 
+    public DoseDateTime(Calendar cal) {
+        InitialiseFormatter();
+        InitialiseDate(cal.getTime(), cal.getTimeZone());
+    }
+
     private void InitialiseFormatter() {
         m_format = new SimpleDateFormat(FULL_DATE_FORMAT);
     }
@@ -45,8 +50,7 @@ public class DoseDateTime {
     }
 
     public static DoseDateTime Now() {
-        Calendar calToday = Calendar.getInstance();
-        return new DoseDateTime(calToday.getTime(), calToday.getTimeZone());
+        return new DoseDateTime(Calendar.getInstance());
     }
 
     private Date ConvertTimeBetweenZones(Date date, TimeZone sourceZone, TimeZone destZone) {
