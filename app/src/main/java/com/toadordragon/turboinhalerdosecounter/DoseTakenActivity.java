@@ -10,6 +10,8 @@ import android.support.v7.app.NotificationCompat;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.Calendar;
+
 public class DoseTakenActivity extends AppCompatActivity {
     public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
 
@@ -31,7 +33,7 @@ public class DoseTakenActivity extends AppCompatActivity {
         doseMessageTextView.setText(String.format(getString(R.string.dose_message), db.getDosesTodayCount()));
 
         db.getCountsByDay();
-        String dosesToday = db.getTodayDoseTimes();
+        String dosesToday = db.getTodayDoseTimes(Calendar.getInstance());
         long countdownIntervalSeconds = (5 * 60) - elapsedSeconds;
 
         new CountDownTimer(countdownIntervalSeconds * 1000, 1000) {

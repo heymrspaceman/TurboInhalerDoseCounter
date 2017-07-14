@@ -31,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
@@ -129,10 +130,10 @@ public class MainActivity extends AppCompatActivity {
         doseMessageInfoTextView.setText(String.format(getString(R.string.dose_message_with_24hour, doseRecorderDb.getDosesTodayCount(), doseRecorderDb.getDoses24HoursCount())));
 
         final TextView lastDoseMessageInfoTextView = (TextView) findViewById(R.id.last_dose);
-        lastDoseMessageInfoTextView.setText(String.format(getString(R.string.last_dose_message), doseRecorderDb.getLastDoseTimestamp()));
+        lastDoseMessageInfoTextView.setText(String.format(getString(R.string.last_dose_message), doseRecorderDb.getLastDoseTimestamp(Calendar.getInstance())));
 
         final TextView doseSummaryTextView = (TextView) findViewById(R.id.dose_summary);
-        doseSummaryTextView.setText(String.format(getString(R.string.dose_summary_message), doseRecorderDb.getTodayDoseTimes()));
+        doseSummaryTextView.setText(String.format(getString(R.string.dose_summary_message), doseRecorderDb.getTodayDoseTimes(Calendar.getInstance())));
     }
 
     public void takeDose(View view) {

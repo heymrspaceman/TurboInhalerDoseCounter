@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by thomas on 07-Mar-17.
@@ -37,6 +38,15 @@ public class MissedDoseActivity extends AppCompatActivity {
         // TODO tidy this deprecated code up - see http://stackoverflow.com/questions/33122147/
         // Making a class wrapper seems best idea
 
+
+        //DO THIS 1
+
+        // TIDY THIS UP
+        // Add DoseDateTime.GetTime(Calendar cal)
+        // Then pass that to the intent - changing ELAPSED_SECONDS_ID
+
+
+
         Calendar calToday = Calendar.getInstance();
         Calendar calTodayFiveMinsAgo = Calendar.getInstance();
         calTodayFiveMinsAgo.set(Calendar.MINUTE, -5);
@@ -52,7 +62,7 @@ public class MissedDoseActivity extends AppCompatActivity {
         if (timeNow.after(missedDoseTime)) {
 
             // Record the dose
-            doseRecorderDb.addMissedCount(missedDoseTime, DoseDateTime.DoseTimeZone.Local);
+            doseRecorderDb.addMissedCount(missedDoseTime, calToday.getTimeZone());
 
             // If missed dose time is within five minutes we want to display dose taken activity, otherwise we just go back to main activity
             if (timeFiveMinsAgo.before(missedDoseTime)) {

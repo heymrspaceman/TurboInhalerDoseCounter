@@ -14,12 +14,12 @@ import java.util.TimeZone;
 
 public class DoseDateTime {
 
-    public DoseDateTime(Date date, DoseTimeZone zone) {
+    public DoseDateTime(Date date, TimeZone zone) {
         InitialiseFormatter();
         InitialiseDate(date, zone);
     }
 
-    public DoseDateTime(String dateText, DoseTimeZone zone) {
+    public DoseDateTime(String dateText, TimeZone zone) {
         InitialiseFormatter();
         try {
             Date date = m_format.parse(dateText);
@@ -34,10 +34,11 @@ public class DoseDateTime {
         m_format = new SimpleDateFormat(FULL_DATE_FORMAT);
     }
 
-    private void InitialiseDate(Date date, DoseTimeZone zone) {
+    private void InitialiseDate(Date date, TimeZone zone) {
+        m_utcTimeZone = TimeZone.getTimeZone("UTC");
         // All dates stored as UTC
-        if (zone == DoseTimeZone.Local) {
-            m_date = ConvertTimeBetweenZones(date, DoseTimeZone.Local, DoseTimeZone.UTC);
+        if (m_utcTimeZone != zone) {
+            m_date = ConvertTimeBetweenZones(date, zone, m_utcTimeZone);
         } else {
             m_date = date;
         }
@@ -45,26 +46,17 @@ public class DoseDateTime {
 
     public static DoseDateTime Now() {
         Calendar calToday = Calendar.getInstance();
-        return new DoseDateTime(calToday.getTime(), DoseTimeZone.Local);
+        return new DoseDateTime(calToday.getTime(), calToday.getTimeZone());
     }
 
-    private Date ConvertTimeBetweenZones(Date date, DoseTimeZone sourceZone, DoseTimeZone destZone) {
+    private Date ConvertTimeBetweenZones(Date date, TimeZone sourceZone, TimeZone destZone) {
         Date convertedDate = date;
         try
         {
             SimpleDateFormat formatterIn = new SimpleDateFormat(FULL_DATE_FORMAT);
-            if (sourceZone == DoseTimeZone.Local) {
-                formatterIn.setTimeZone(TimeZone.getTimeZone("UTC"));
-            } else {
-                formatterIn.setTimeZone(TimeZone.getTimeZone("Europe/London")); // Apparently the same as BST
-            }
+            formatterIn.setTimeZone(destZone);
             String bstAdjustedTimeText = formatterIn.format(date);
-
-            if (destZone == DoseTimeZone.Local) {
-                formatterIn.setTimeZone(TimeZone.getTimeZone("UTC"));
-            } else {
-                formatterIn.setTimeZone(TimeZone.getTimeZone("Europe/London")); // Apparently the same as BST
-            }
+            formatterIn.setTimeZone(sourceZone);
             Calendar dateCal = Calendar.getInstance();
             dateCal.setTime(formatterIn.parse(bstAdjustedTimeText));
             convertedDate = dateCal.getTime();
@@ -77,22 +69,22 @@ public class DoseDateTime {
         return convertedDate;
     }
 
-    public String GetDateTimeText(DoseTimeZone zone) {
+    public String GetDateTimeText(TimeZone zone) {
         return FormatText(zone, FULL_DATE_FORMAT);
     }
 
-    public String GetHourMinuteText(DoseTimeZone zone) {
+    public String GetHourMinuteText(TimeZone zone) {
         return FormatText(zone, HOUR_MINUTE_FORMAT);
     }
 
-    public String GetHourText(DoseTimeZone zone) {
+    public String GetHourText(TimeZone zone) {
         return FormatText(zone, HOUR_FORMAT);
     }
 
-    private String FormatText(DoseTimeZone zone, String dateFormat) {
+    private String FormatText(TimeZone zone, String dateFormat) {
         Date convertedDate = m_date;
-        if (zone != DoseTimeZone.UTC) {
-            convertedDate = ConvertTimeBetweenZones(m_date, DoseTimeZone.UTC, zone);
+        if (m_utcTimeZone != zone) {
+            convertedDate = ConvertTimeBetweenZones(m_date, m_utcTimeZone, zone);
         }
         String hourMinuteText = new SimpleDateFormat(dateFormat).format(convertedDate);
         return hourMinuteText.toLowerCase();
@@ -100,13 +92,9 @@ public class DoseDateTime {
 
     private SimpleDateFormat m_format;
     private Date m_date;
+    private TimeZone m_utcTimeZone;
 
-    private static final String FULL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    private static final String HOUR_FORMAT = "ha";
-    private static final String HOUR_MINUTE_FORMAT = "h:mma";
-
-    public enum DoseTimeZone {
-        Local,
-        UTC
-    }
+    private final String FULL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private final String HOUR_FORMAT = "ha";
+    private final String HOUR_MINUTE_FORMAT = "h:mma";
 }
