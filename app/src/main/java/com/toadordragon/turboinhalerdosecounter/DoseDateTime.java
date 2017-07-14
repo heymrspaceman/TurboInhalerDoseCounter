@@ -45,7 +45,7 @@ public class DoseDateTime {
 
     public static DoseDateTime Now() {
         Calendar calToday = Calendar.getInstance();
-        return new DoseDateTime(calToday.getTime(), DoseTimeZone.UTC);
+        return new DoseDateTime(calToday.getTime(), DoseTimeZone.Local);
     }
 
     private Date ConvertTimeBetweenZones(Date date, DoseTimeZone sourceZone, DoseTimeZone destZone) {
