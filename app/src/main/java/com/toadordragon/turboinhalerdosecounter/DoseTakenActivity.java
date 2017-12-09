@@ -52,6 +52,7 @@ public class DoseTakenActivity extends AppCompatActivity {
 
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
                 mBuilder.setSmallIcon(R.mipmap.ic_launcher_transparent);
+                mBuilder.setColor(getResources().getColor(R.color.colorDoseNotification));
                 mBuilder.setContentTitle(getString(R.string.app_name));
 
                 // Annoyingly this does not get re-centred
