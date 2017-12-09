@@ -32,6 +32,7 @@ import java.util.Date;
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
     public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
     public final static int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 98;
     public final static int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 99;
@@ -112,9 +113,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             } catch (FileNotFoundException fx) {
-
+                Log.e(TAG, "Imported file not found: " + fx.getMessage());
             } catch (IOException iox) {
-
+                Log.e(TAG, "Error during importing: " + iox.getMessage());
             }
         }
     }
@@ -212,14 +213,20 @@ public class MainActivity extends AppCompatActivity {
                 mFileWriter.close();
             }
 
-            // This makes it appear in downloads
-            DownloadManager downloadManager = (DownloadManager)this.getSystemService(this.DOWNLOAD_SERVICE);
-            downloadManager.addCompletedDownload(f.getName(), f.getName(), true, "application/tsdcsv", f.getAbsolutePath(),f.length(),true);
+            try {
+                // This makes it appear in downloads
+                DownloadManager downloadManager = (DownloadManager) this.getSystemService(this.DOWNLOAD_SERVICE);
+                downloadManager.addCompletedDownload(f.getName(), f.getName(), true, "application/tsdcsv", f.getAbsolutePath(), f.length(), true);
+            } catch (Exception ex) {
+                // Not a big deal if we can't get a download notification to appear
+                Log.e(TAG, "Download notification failed: " + ex.getMessage());
+            }
 
             Context context = getApplicationContext();
             Toast.makeText(getApplicationContext(), "Data exported", Toast.LENGTH_SHORT).show();
         }
         catch(IOException ex){
+            Log.e(TAG, "Problem exporting: " + ex.getMessage());
         }
     }
 
