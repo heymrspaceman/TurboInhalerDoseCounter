@@ -14,12 +14,19 @@ import java.util.TimeZone;
 
 public class DoseDateTime {
 
-    public DoseDateTime(Date date, TimeZone zone) {
+    private CalendarWrapper m_calWrapper;
+    private SimpleDateFormat m_format;
+    private Date m_date;
+    private TimeZone m_utcTimeZone;
+
+    public DoseDateTime(CalendarWrapper calWrapper, Date date, TimeZone zone) {
+        m_calWrapper = calWrapper;
         InitialiseFormatter();
         InitialiseDate(date, zone);
     }
 
-    public DoseDateTime(String dateText, TimeZone zone) {
+    public DoseDateTime(CalendarWrapper calWrapper, String dateText, TimeZone zone) {
+        m_calWrapper = calWrapper;
         InitialiseFormatter();
         try {
             Date date = m_format.parse(dateText);
@@ -30,8 +37,10 @@ public class DoseDateTime {
         }
     }
 
-    public DoseDateTime(Calendar cal) {
+    public DoseDateTime(CalendarWrapper calWrapper) {
+        m_calWrapper = calWrapper;
         InitialiseFormatter();
+        Calendar cal = calWrapper.getCalendar();
         InitialiseDate(cal.getTime(), cal.getTimeZone());
     }
 
@@ -49,8 +58,9 @@ public class DoseDateTime {
         }
     }
 
+    // mock the Calendar.getInstance so we can set the current date/time later in the unit tests
     public static DoseDateTime Now() {
-        return new DoseDateTime(Calendar.getInstance());
+        return new DoseDateTime(new CalendarWrapper());
     }
 
     private Date ConvertTimeBetweenZones(Date date, TimeZone sourceZone, TimeZone destZone) {
@@ -71,6 +81,10 @@ public class DoseDateTime {
         }
 
         return convertedDate;
+    }
+
+    public long getUTCTime() {
+        return m_date.getTime();
     }
 
     public String GetDateTimeText(TimeZone zone) {
@@ -94,9 +108,34 @@ public class DoseDateTime {
         return hourMinuteText.toLowerCase();
     }
 
-    private SimpleDateFormat m_format;
-    private Date m_date;
-    private TimeZone m_utcTimeZone;
+    // Pass in todayMidnight so we can test, but we remove it later and mock the Calendar.getInstance so we can set the current date/time later in the unit tests
+    public String DaysSince(CalendarWrapper calWrapper) {
+        Calendar cal = calWrapper.getCalendar();
+        Calendar midnightCal = (Calendar)cal.clone() ;
+        midnightCal.set(Calendar.HOUR_OF_DAY, 0);
+        midnightCal.set(Calendar.MINUTE, 0);
+        midnightCal.set(Calendar.SECOND, 0);
+        midnightCal.set(Calendar.MILLISECOND, 0);
+        DoseDateTime midnightToday = new DoseDateTime(new CalendarWrapper(midnightCal));
+
+        if (this.getUTCTime() > midnightToday.getUTCTime()) {
+            return "today";
+        }
+
+        long midnightTodaySeconds = midnightToday.getUTCTime();
+        long thisSeconds = this.getUTCTime();
+        long secondsSince = midnightTodaySeconds - thisSeconds;
+
+        long oneDay = 24 * 60 * 60 * 1000;
+        long daysSeconds = secondsSince % oneDay;
+        long days = (secondsSince - daysSeconds) / oneDay;
+
+        if (days == 0) {
+            return "yesterday";
+        } else {
+            return (days + 1) + " days ago";
+        }
+    }
 
     private final String FULL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     private final String HOUR_FORMAT = "ha";

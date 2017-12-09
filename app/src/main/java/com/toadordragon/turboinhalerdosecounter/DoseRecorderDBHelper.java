@@ -4,12 +4,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.text.TextUtils;
 
-import java.text.SimpleDateFormat;
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Calendar;
 
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 public class DoseRecorderDBHelper extends SQLiteOpenHelper {
@@ -28,6 +30,16 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
         return sInstance;
     }
 
+    public void clearDatabaseAndRecreate() {
+        clearDatabase();
+    }
+
+    public void clearDatabase() {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        db.execSQL("DELETE FROM " + DoseRecorderContract.Dose.TABLE_NAME);
+    }
+
     // Must be private see getInstance method
     private DoseRecorderDBHelper(Context context) {
         super(context, DATABASE_NAME, null, 1);
@@ -41,18 +53,6 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(DoseRecorderContract.DELETE_ENTRIES);
-    }
-
-    public void addCount() {
-        addCount(DoseDateTime.Now());
-    }
-
-    public void addMissedCount(Date missedDoseTime, TimeZone timeZone) {
-        addCount(new DoseDateTime(missedDoseTime, timeZone));
-    }
-
-    public void addMissedCount(String missedDoseTimeText, TimeZone timeZone) {
-        addCount(new DoseDateTime(missedDoseTimeText, timeZone));
     }
 
     public void addCount(DoseDateTime doseTime) {
@@ -77,101 +77,132 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
     }
 
     // TODO move this out of database class
-    public int getDosesTodayCount() {
-        Calendar todayMidnightCal = Calendar.getInstance();
+    public int getDosesForDayCount(CalendarWrapper calWrapper) {
+        CalendarWrapper todayMidnightCal = CalendarWrapper.Copy(calWrapper);
         todayMidnightCal.set(Calendar.HOUR_OF_DAY, 0);
         todayMidnightCal.set(Calendar.MINUTE, 0);
         todayMidnightCal.set(Calendar.SECOND, 0);
         todayMidnightCal.set(Calendar.MILLISECOND, 0);
 
-        Calendar tomorrowMidnightCal = (Calendar)todayMidnightCal.clone();
+        CalendarWrapper tomorrowMidnightCal = CalendarWrapper.Copy(todayMidnightCal);
         tomorrowMidnightCal.add(Calendar.DATE, 1);
 
-        return getDosesInRange(new DoseDateTime(todayMidnightCal), new DoseDateTime(tomorrowMidnightCal), todayMidnightCal.getTimeZone());
+        return getDosesInRange(new DoseDateTime(todayMidnightCal), new DoseDateTime(tomorrowMidnightCal));
     }
 
     // TODO move this out of database class
-    public int getDoses24HoursCount() {
-        Calendar nowCal = Calendar.getInstance();
+    public int getDoses24HoursCount(CalendarWrapper calWrapper) {
+        CalendarWrapper nowCal = CalendarWrapper.Copy(calWrapper);
 
-        Calendar dayAgoCal = (Calendar)nowCal.clone();
+        CalendarWrapper dayAgoCal = CalendarWrapper.Copy(nowCal);
         dayAgoCal.add(Calendar.DATE, -1);
 
-        return getDosesInRange(new DoseDateTime(dayAgoCal), new DoseDateTime(nowCal), nowCal.getTimeZone());
+        return getDosesInRange(new DoseDateTime(dayAgoCal), new DoseDateTime(nowCal));
     }
 
-    private int getDosesInRange(DoseDateTime start, DoseDateTime end, TimeZone zone) {
+    private int getDosesInRange(DoseDateTime start, DoseDateTime end) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor dosesCount = db.rawQuery("SELECT * FROM " + DoseRecorderContract.Dose.TABLE_NAME +
-                " WHERE " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " >= '" + start.GetDateTimeText(zone) +
-                "' AND " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " < '" + end.GetDateTimeText(zone) + "'", null);
+        TimeZone utcTimeZone = TimeZone.getTimeZone("UTC");
 
-        if (dosesCount != null) {
-            if (dosesCount.moveToFirst()) {
-                return dosesCount.getCount();
-            }
+        String query1 = "SELECT * FROM " + DoseRecorderContract.Dose.TABLE_NAME;
+        Cursor dosesCount1 = db.rawQuery(query1, null);
+        int result1 = 0;
+        if (dosesCount1 != null) {
+            result1 = dosesCount1.getCount();
         }
 
-        return 0;
+        String query = "SELECT * FROM " + DoseRecorderContract.Dose.TABLE_NAME +
+                " WHERE " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " >= '" + start.GetDateTimeText(utcTimeZone) +
+                "' AND " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " <= '" + end.GetDateTimeText(utcTimeZone) + "'";
+        Cursor dosesCount = db.rawQuery(query, null);
+
+        int result = 0;
+        if (dosesCount != null) {
+            result = dosesCount.getCount();
+        }
+
+        return result;
     }
 
-    public String getTodayDoseTimes(Calendar cal) {
+    // Possibly CalendarWrapper should be added to the constructor
+    public String getDoseTimesForDay(CalendarWrapper calWrapper) {
         SQLiteDatabase db = this.getReadableDatabase();
 
-        Calendar calToday = Calendar.getInstance();
+        CalendarWrapper dayMidnightCal = CalendarWrapper.Copy(calWrapper);
+        dayMidnightCal.set(Calendar.HOUR_OF_DAY, 0);
+        dayMidnightCal.set(Calendar.MINUTE, 0);
+        dayMidnightCal.set(Calendar.SECOND, 0);
+        dayMidnightCal.set(Calendar.MILLISECOND, 0);
+        DoseDateTime todayMidnight = new DoseDateTime(dayMidnightCal);
 
-        Calendar calTomorrow = (Calendar)calToday.clone();
-        calTomorrow.add(Calendar.DATE, 1);
+        CalendarWrapper nextDayCal = CalendarWrapper.Copy(dayMidnightCal);
+        nextDayCal.add(Calendar.DATE, 1);
 
-        DoseDateTime startDate = new DoseDateTime(calToday);
-        DoseDateTime endDate = new DoseDateTime(calTomorrow);
-        String startDateText = startDate.GetDateTimeText(calToday.getTimeZone());
-        String endDateText = startDate.GetDateTimeText(calToday.getTimeZone());
+        DoseDateTime startDate = new DoseDateTime(dayMidnightCal);
+        DoseDateTime endDate = new DoseDateTime(nextDayCal);
+        TimeZone utcTimeZone = TimeZone.getTimeZone("UTC");
+        String startDateText = startDate.GetDateTimeText(utcTimeZone);
+        String endDateText = endDate.GetDateTimeText(utcTimeZone);
 
         String queryText = "SELECT strftime('%H', " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + "), " +
                 "COUNT(" + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ") FROM " + DoseRecorderContract.Dose.TABLE_NAME + " " +
                 "WHERE " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " between '" + startDateText + "' and '" + endDateText + "' " +
                 "GROUP BY strftime('%Y-%m-%d %H:00:00', " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + ")";
 
-        String todayDoseTimes = "";
+        List<String> dayDoseTimes = new ArrayList<String>();
+
         Cursor hourDoses = db.rawQuery(queryText, null);
         if (hourDoses != null) {
             if (hourDoses.moveToFirst()) {
-
+                CalendarWrapper calHourDose = null;
+                DoseDateTime hourDoseTime = null;
                 int doseCount = 0;
+                int hour = 0;
+                boolean firstDose = false;
                 hourDoses.moveToFirst();
                 while (!hourDoses.isAfterLast()) {
-                    // Put the hour back into todays date
-                    String dateTimeText = startDate + " " + hourDoses.getString(0) + ":00:00";
-                    DoseDateTime doseDateTime = new DoseDateTime(dateTimeText, TimeZone.getTimeZone("UTC"));
-                    int count = hourDoses.getInt(1);
+                    hour = Integer.parseInt(hourDoses.getString(0));
+                    calHourDose = CalendarWrapper.Copy(dayMidnightCal);
+                    calHourDose.add(Calendar.HOUR, hour);
+                    hourDoseTime = new DoseDateTime(calHourDose);
+                    doseCount = hourDoses.getInt(1);
 
-                    todayDoseTimes += String.format(" %s", doseDateTime.GetHourText(cal.getTimeZone()));
-                    if (count > 1) {
-                        todayDoseTimes += String.format("(%d)", count);
+                    String dose = String.format("%s", hourDoseTime.GetHourText(calWrapper.getTimeZone()));
+                    if (doseCount > 1) {
+                        dose += String.format("(%d)", doseCount);
                     }
+                    dayDoseTimes.add(dose);
                     hourDoses.moveToNext();
-                    doseCount++;
-                    if (doseCount != hourDoses.getCount()) {
-                        todayDoseTimes += ", ";
-                    }
                 }
             }
         }
 
-        return todayDoseTimes;
+        return TextUtils.join(", ", dayDoseTimes);
     }
 
-    public String getLastDoseTimestamp(Calendar cal) {
+    public String getLastDoseTimestampFromDay(CalendarWrapper calWrapper) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor lastTimestamp = db.rawQuery("SELECT * FROM " + DoseRecorderContract.Dose.TABLE_NAME + " ORDER BY " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " DESC LIMIT 1", null);
+
+        CalendarWrapper dayAlmostMidnightCal = CalendarWrapper.Copy(calWrapper);
+        dayAlmostMidnightCal.set(Calendar.HOUR_OF_DAY, 23);
+        dayAlmostMidnightCal.set(Calendar.MINUTE, 59);
+        dayAlmostMidnightCal.set(Calendar.SECOND, 59);
+        dayAlmostMidnightCal.set(Calendar.MILLISECOND, 999);
+        DoseDateTime dayAlmostMidnight = new DoseDateTime(dayAlmostMidnightCal);
+
+        String query = "SELECT * FROM " + DoseRecorderContract.Dose.TABLE_NAME +
+                " WHERE " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " <= '" + dayAlmostMidnight.GetDateTimeText(calWrapper.getTimeZone()) + "'" +
+                " ORDER BY " + DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP + " DESC LIMIT 1";
+        Cursor lastTimestamp = db.rawQuery(query, null);
 
         if (lastTimestamp != null) {
             if (lastTimestamp.moveToFirst()) {
                 String lastDoseText = lastTimestamp.getString(lastTimestamp.getColumnIndex(DoseRecorderContract.Dose.COLUMN_NAME_TIMESTAMP));
-                DoseDateTime lastDoseDateTime = new DoseDateTime(lastDoseText, TimeZone.getTimeZone("UTC"));
+                DoseDateTime lastDoseDateTime = new DoseDateTime(calWrapper, lastDoseText, TimeZone.getTimeZone("UTC"));
+                String prefix = lastDoseDateTime.DaysSince(calWrapper);
+
                 // TODO Do I need to close these Cursors?
-                return lastDoseDateTime.GetHourMinuteText(cal.getTimeZone());
+                return prefix + " " + lastDoseDateTime.GetHourMinuteText(calWrapper.getTimeZone());
             }
         }
 
@@ -220,7 +251,7 @@ public class DoseRecorderDBHelper extends SQLiteOpenHelper {
             if (doseSplit.length == 2) {
                 int doesValue = Integer.parseInt(doseSplit[0]); // always 1 currently
                 String doseTimestamp = doseSplit[1];
-                addMissedCount(doseTimestamp, TimeZone.getTimeZone("UTC"));
+                addCount(new DoseDateTime(new CalendarWrapper(), doseTimestamp, TimeZone.getTimeZone("UTC")));
             }
         }
     }

@@ -62,7 +62,7 @@ public class MissedDoseActivity extends AppCompatActivity {
         if (timeNow.after(missedDoseTime)) {
 
             // Record the dose
-            doseRecorderDb.addMissedCount(missedDoseTime, calToday.getTimeZone());
+            doseRecorderDb.addCount(new DoseDateTime(new CalendarWrapper(calTimePicker)));
 
             // If missed dose time is within five minutes we want to display dose taken activity, otherwise we just go back to main activity
             if (timeFiveMinsAgo.before(missedDoseTime)) {

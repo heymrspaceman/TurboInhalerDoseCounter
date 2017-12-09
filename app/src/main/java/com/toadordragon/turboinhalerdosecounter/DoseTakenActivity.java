@@ -19,6 +19,7 @@ public class DoseTakenActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_message);
+        CalendarWrapper calWrapper = new CalendarWrapper();
 
         long elapsedSeconds = 0;
         Intent thisIntent = getIntent();
@@ -30,10 +31,10 @@ public class DoseTakenActivity extends AppCompatActivity {
         final TextView timerTextView = (TextView) findViewById(R.id.timer_message);
         final TextView timerInfoTextView = (TextView) findViewById(R.id.timer_info_message);
 
-        doseMessageTextView.setText(String.format(getString(R.string.dose_message), db.getDosesTodayCount()));
+        doseMessageTextView.setText(String.format(getString(R.string.dose_message, db.getDosesForDayCount(calWrapper))));
 
         db.getCountsByDay();
-        String dosesToday = db.getTodayDoseTimes(Calendar.getInstance());
+        String dosesToday = db.getDoseTimesForDay(calWrapper);
         long countdownIntervalSeconds = (5 * 60) - elapsedSeconds;
 
         new CountDownTimer(countdownIntervalSeconds * 1000, 1000) {

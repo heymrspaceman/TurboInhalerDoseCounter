@@ -8,7 +8,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -21,17 +20,14 @@ import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
@@ -125,19 +121,30 @@ public class MainActivity extends AppCompatActivity {
 
     private void RefreshDoses() {
         doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
+        CalendarWrapper calWrapper = new CalendarWrapper();
 
         final TextView doseMessageInfoTextView = (TextView) findViewById(R.id.dose_message_info);
-        doseMessageInfoTextView.setText(String.format(getString(R.string.dose_message_with_24hour, doseRecorderDb.getDosesTodayCount(), doseRecorderDb.getDoses24HoursCount())));
+        int countDay = doseRecorderDb.getDosesForDayCount(calWrapper);
+        int count24Hours = doseRecorderDb.getDoses24HoursCount(calWrapper);
+        String doseInfoText = String.format(getString(R.string.dose_message_with_24hour, countDay, count24Hours));
+        doseMessageInfoTextView.setText(doseInfoText);
 
         final TextView lastDoseMessageInfoTextView = (TextView) findViewById(R.id.last_dose);
-        lastDoseMessageInfoTextView.setText(String.format(getString(R.string.last_dose_message), doseRecorderDb.getLastDoseTimestamp(Calendar.getInstance())));
+        if (doseRecorderDb.getDosesCount() > 0) {
+            String lastDoseText = doseRecorderDb.getLastDoseTimestampFromDay(calWrapper);
+            lastDoseMessageInfoTextView.setText(String.format(getString(R.string.last_dose_message), lastDoseText));
+        } else {
+            String test = getString(R.string.no_previous_doses_message);
+            lastDoseMessageInfoTextView.setText(getString(R.string.no_previous_doses_message));
+        }
 
         final TextView doseSummaryTextView = (TextView) findViewById(R.id.dose_summary);
-        doseSummaryTextView.setText(String.format(getString(R.string.dose_summary_message), doseRecorderDb.getTodayDoseTimes(Calendar.getInstance())));
+        doseSummaryTextView.setText(doseRecorderDb.getDoseTimesForDay(calWrapper));
     }
 
     public void takeDose(View view) {
-        doseRecorderDb.addCount();
+        CalendarWrapper calWrapper =new CalendarWrapper();
+        doseRecorderDb.addCount(new DoseDateTime(calWrapper));
 
         Intent intent = new Intent(this, DoseTakenActivity.class);
         intent.putExtra(ELAPSED_SECONDS_ID, 0);
