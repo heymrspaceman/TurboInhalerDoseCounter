@@ -51,7 +51,7 @@ public class DoseTakenActivity extends AppCompatActivity {
                 timerTextView.setText(String.format(getString(R.string.timer_message), 0, 0));
 
                 NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-                mBuilder.setSmallIcon(R.mipmap.ic_launcher);
+                mBuilder.setSmallIcon(R.mipmap.ic_launcher_transparent);
                 mBuilder.setContentTitle(getString(R.string.app_name));
 
                 // Annoyingly this does not get re-centred
