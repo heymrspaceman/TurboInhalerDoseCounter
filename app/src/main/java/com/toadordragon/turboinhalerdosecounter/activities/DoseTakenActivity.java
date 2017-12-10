@@ -3,7 +3,9 @@ package com.toadordragon.turboinhalerdosecounter.activities;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.toadordragon.turboinhalerdosecounter.CalendarWrapper;
 import com.toadordragon.turboinhalerdosecounter.R;
+import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
 import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
 
 public class DoseTakenActivity extends AppCompatActivity {
@@ -24,12 +26,11 @@ public class DoseTakenActivity extends AppCompatActivity {
                 return;
             }
 
-            // Create an instance of ExampleFragment
-            DoseTakenFragment firstFragment = new DoseTakenFragment();
+            DoseRecorderDBHelper doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
 
-            // In case this activity was started with special instructions from an Intent,
-            // pass the Intent's extras to the fragment as arguments
-            firstFragment.setArguments(getIntent().getExtras());
+            // Create an instance of ExampleFragment
+            int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
+            DoseTakenFragment firstFragment = DoseTakenFragment.newInstance(0, dosesToday);
 
             // Add the fragment to the 'fragment_container' FrameLayout
             getSupportFragmentManager().beginTransaction()

@@ -20,8 +20,8 @@ public class DoseTakenFragment extends Fragment {
     private int dosesToday;
 
     // Non-fragment stuff
-    public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
-    public final static String DOSES_TODAY_ID = "com.example.thomas.myapplication.DOSES_TODAY_ID";
+    private final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
+    private final static String DOSES_TODAY_ID = "com.example.thomas.myapplication.DOSES_TODAY_ID";
     CountDownTimer secondsTimer;
 
     public DoseTakenFragment() {

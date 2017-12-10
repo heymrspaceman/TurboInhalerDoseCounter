@@ -49,18 +49,9 @@ public class MissedDoseActivity extends AppCompatActivity implements MissedDoseF
 
                 long elapsedMilliseconds = timeNow.getTime() - missedDoseTime.getTime();
                 long elapsedSeconds = elapsedMilliseconds / 1000;
+                int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
 
-                /*Intent intent = new Intent(this, DoseTakenActivity.class);
-                intent.putExtra(ELAPSED_SECONDS_ID, elapsedSeconds);
-                intent.putExtra(DOSES_TODAY_ID, doseRecorderDb.getDosesForDayCount(new CalendarWrapper()));
-                startActivity(intent);*/
-
-                // Create fragment and give it an argument for the selected article
-                DoseTakenFragment newFragment = new DoseTakenFragment();
-                Bundle args = new Bundle();
-                args.putLong(DoseTakenFragment.ELAPSED_SECONDS_ID, elapsedSeconds);
-                args.putInt(DoseTakenFragment.DOSES_TODAY_ID, doseRecorderDb.getDosesForDayCount(new CalendarWrapper()));
-                newFragment.setArguments(args);
+                DoseTakenFragment newFragment = DoseTakenFragment.newInstance(elapsedSeconds, dosesToday);
 
                 android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
 
