@@ -16,12 +16,12 @@
     <string name="last_dose_message">Last dose: %s</string>
     <string name="no_previous_doses_message">No previous doses</string>
     <string name="dose_summary_message">%s</string>
-    <string name= "no_import_data">No data to import</string>
-    <string name= "import_cancelled">Data import cancelled</string>
+    <string name="no_import_data">No data to import</string>
+    <string name="import_cancelled">Data import cancelled</string>
     <string name="import_data_message">Do you wish to import %d records</string>
-    <string name= "yes_dialog_button">yes</string>
-    <string name= "no_dialog_button">no</string>
-    <string name= "today_text">today</string>
-    <string name= "yesterday_text">yesterday</string>
-    <string name= "days_ago_text">%d days ago</string>
+    <string name="yes_dialog_button">yes</string>
+    <string name="no_dialog_button">no</string>
+    <string name="today_text">today</string>
+    <string name="yesterday_text">yesterday</string>
+    <string name="days_ago_text">%d days ago</string>
 </resources>

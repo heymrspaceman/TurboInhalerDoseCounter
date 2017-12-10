@@ -10,61 +10,38 @@ import android.support.v7.app.NotificationCompat;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
+
 import java.util.Calendar;
 
 public class DoseTakenActivity extends AppCompatActivity {
-    public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_message);
-        CalendarWrapper calWrapper = new CalendarWrapper();
 
-        long elapsedSeconds = 0;
-        Intent thisIntent = getIntent();
-        elapsedSeconds = thisIntent.getLongExtra(ELAPSED_SECONDS_ID, -1);
+        // Check whether the activity is using the layout version with
+        // the fragment_container FrameLayout. If so, we must add the first fragment
+        if (findViewById(R.id.fragmentDoseTaken_container) != null) {
 
-        DoseRecorderDBHelper db = DoseRecorderDBHelper.getInstance(this);
-
-        final TextView doseMessageTextView = (TextView) findViewById(R.id.dose_message);
-        final TextView timerTextView = (TextView) findViewById(R.id.timer_message);
-        final TextView timerInfoTextView = (TextView) findViewById(R.id.timer_info_message);
-
-        doseMessageTextView.setText(String.format(getString(R.string.dose_message, db.getDosesForDayCount(calWrapper))));
-
-        db.getCountsByDay();
-        String dosesToday = db.getDoseTimesForDay(calWrapper);
-        long countdownIntervalSeconds = (5 * 60) - elapsedSeconds;
-
-        new CountDownTimer(countdownIntervalSeconds * 1000, 1000) {
-            public void onTick(long millisUntilFinished) {
-                long totalSeconds = millisUntilFinished / 1000;
-                long minutes = totalSeconds / 60;
-                long seconds = totalSeconds % 60;
-
-                timerTextView.setText(String.format(getString(R.string.timer_message), minutes, seconds));
+            // However, if we're being restored from a previous state,
+            // then we don't need to do anything and should return or else
+            // we could end up with overlapping fragments.
+            if (savedInstanceState != null) {
+                return;
             }
 
-            public void onFinish() {
-                timerInfoTextView.setText(R.string.safe_dose_message);
-                timerTextView.setText(String.format(getString(R.string.timer_message), 0, 0));
+            // Create an instance of ExampleFragment
+            DoseTakenFragment firstFragment = new DoseTakenFragment();
 
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext());
-                mBuilder.setSmallIcon(R.mipmap.ic_launcher_transparent);
-                mBuilder.setColor(getResources().getColor(R.color.colorDoseNotification));
-                mBuilder.setContentTitle(getString(R.string.app_name));
+            // In case this activity was started with special instructions from an Intent,
+            // pass the Intent's extras to the fragment as arguments
+            firstFragment.setArguments(getIntent().getExtras());
 
-                // Annoyingly this does not get re-centred
-                mBuilder.setContentText(getString(R.string.safe_dose_message));
-
-                NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-                // mId allows you to update the notification later on.
-                int mId = 0;
-                mNotificationManager.notify(mId, mBuilder.build());
-            }
-        }.start();
-
+            // Add the fragment to the 'fragment_container' FrameLayout
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.fragmentDoseTaken_container, firstFragment).commit();
+        }
     }
 }

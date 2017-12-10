@@ -8,6 +8,9 @@ import android.view.View;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
+import com.toadordragon.turboinhalerdosecounter.fragments.MissedDoseFragment;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -16,46 +19,23 @@ import java.util.TimeZone;
  * Created by thomas on 07-Mar-17.
  */
 
-public class MissedDoseActivity extends AppCompatActivity {
-
+public class MissedDoseActivity extends AppCompatActivity implements MissedDoseFragment.OnMissedDoseListener {
     DoseRecorderDBHelper doseRecorderDb;
-    public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
+    MissedDoseFragment firstFragment;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.missed_dose);
-
-        doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
-    }
-
-    public void cancelTime(View view) {
+    public void onMissedDoseCancelled() {
         finish();
     }
 
-    public void setTime(View view) {
-        TimePicker timePicker = (TimePicker) findViewById(R.id.missed_dose_time_picker);
-        // TODO tidy this deprecated code up - see http://stackoverflow.com/questions/33122147/
-        // Making a class wrapper seems best idea
-
-
-        //DO THIS 1
-
-        // TIDY THIS UP
-        // Add DoseDateTime.GetTime(Calendar cal)
-        // Then pass that to the intent - changing ELAPSED_SECONDS_ID
-
-
-
+    @Override
+    public void onMissedDoseStarted(Calendar calTimePicker) {
         Calendar calToday = Calendar.getInstance();
         Calendar calTodayFiveMinsAgo = Calendar.getInstance();
         calTodayFiveMinsAgo.set(Calendar.MINUTE, -5);
-        Calendar calTimePicker = Calendar.getInstance();
 
         Date timeNow = calToday.getTime();
         Date timeFiveMinsAgo = calTodayFiveMinsAgo.getTime();
-
-        calTimePicker.set(calToday.get(Calendar.YEAR), calToday.get(Calendar.MONTH), calToday.get(Calendar.DATE), timePicker.getCurrentHour(), timePicker.getCurrentMinute());
         Date missedDoseTime = calTimePicker.getTime();
 
         // Check missed dose time is earlier than current time
@@ -70,18 +50,66 @@ public class MissedDoseActivity extends AppCompatActivity {
                 long elapsedMilliseconds = timeNow.getTime() - missedDoseTime.getTime();
                 long elapsedSeconds = elapsedMilliseconds / 1000;
 
-                Intent intent = new Intent(this, DoseTakenActivity.class);
+                /*Intent intent = new Intent(this, DoseTakenActivity.class);
                 intent.putExtra(ELAPSED_SECONDS_ID, elapsedSeconds);
-                startActivity(intent);
-            }
+                intent.putExtra(DOSES_TODAY_ID, doseRecorderDb.getDosesForDayCount(new CalendarWrapper()));
+                startActivity(intent);*/
 
-            // Finish the activity - as we never need to go back here, we have either
-            // a) recorder an older than 5 minute dose, we go back to the main screen
-            // b) started the display dose taken activity, if we press back we don't want to end up here again
-            finish();
+                // Create fragment and give it an argument for the selected article
+                DoseTakenFragment newFragment = new DoseTakenFragment();
+                Bundle args = new Bundle();
+                args.putLong(DoseTakenFragment.ELAPSED_SECONDS_ID, elapsedSeconds);
+                args.putInt(DoseTakenFragment.DOSES_TODAY_ID, doseRecorderDb.getDosesForDayCount(new CalendarWrapper()));
+                newFragment.setArguments(args);
+
+                android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+                // Replace whatever is in the fragment_container view with this fragment,
+                // and add the transaction to the back stack so the user can navigate back
+                // TODO Hitting back during the countdown timer sends us back to the MissedDose fragment - don't know how to get around this
+                transaction.replace(R.id.fragmentMissedDose_container, newFragment);
+                transaction.addToBackStack(null);
+
+                // Commit the transaction
+                transaction.commit();
+            } else {
+                Context context = getApplicationContext();
+                Toast.makeText(getApplicationContext(), "Missed dose time recorded", Toast.LENGTH_SHORT).show();
+                finish();
+            }
         } else {
             Context context = getApplicationContext();
             Toast.makeText(getApplicationContext(), "Missed dose time should be earlier than current time", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.missed_dose);
+
+        doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
+
+        // Check whether the activity is using the layout version with
+        // the fragment_container FrameLayout. If so, we must add the first fragment
+        if (findViewById(R.id.fragmentMissedDose_container) != null) {
+
+            // However, if we're being restored from a previous state,
+            // then we don't need to do anything and should return or else
+            // we could end up with overlapping fragments.
+            if (savedInstanceState != null) {
+                return;
+            }
+
+            // Create an instance of ExampleFragment
+            firstFragment = new MissedDoseFragment();
+
+            // In case this activity was started with special instructions from an Intent,
+            // pass the Intent's extras to the fragment as arguments
+            firstFragment.setArguments(getIntent().getExtras());
+
+            // Add the fragment to the 'fragment_container' FrameLayout
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.fragmentMissedDose_container, firstFragment).commit();
         }
     }
 }
