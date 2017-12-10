@@ -1,19 +1,19 @@
-package com.toadordragon.turboinhalerdosecounter;
+package com.toadordragon.turboinhalerdosecounter.activities;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
+import com.toadordragon.turboinhalerdosecounter.CalendarWrapper;
+import com.toadordragon.turboinhalerdosecounter.DoseDateTime;
+import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
+import com.toadordragon.turboinhalerdosecounter.R;
 import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.MissedDoseFragment;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * Created by thomas on 07-Mar-17.

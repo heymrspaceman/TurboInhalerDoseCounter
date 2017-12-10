@@ -1,8 +1,9 @@
-package com.toadordragon.turboinhalerdosecounter;
+package com.toadordragon.turboinhalerdosecounter.activities;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.toadordragon.turboinhalerdosecounter.R;
 import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
 
 public class DoseTakenActivity extends AppCompatActivity {

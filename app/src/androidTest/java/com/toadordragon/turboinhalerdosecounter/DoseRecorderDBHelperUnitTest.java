@@ -3,6 +3,8 @@ package com.toadordragon.turboinhalerdosecounter;
 import android.database.Cursor;
 import android.support.test.InstrumentationRegistry;
 
+import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
+
 import org.junit.Before;
 import org.junit.After;
 import org.junit.Test;

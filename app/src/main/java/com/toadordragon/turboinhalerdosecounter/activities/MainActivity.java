@@ -1,4 +1,4 @@
-package com.toadordragon.turboinhalerdosecounter;
+package com.toadordragon.turboinhalerdosecounter.activities;
 
 import android.Manifest;
 import android.app.DownloadManager;
@@ -17,6 +17,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.toadordragon.turboinhalerdosecounter.CalendarWrapper;
+import com.toadordragon.turboinhalerdosecounter.DoseDateTime;
+import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
+import com.toadordragon.turboinhalerdosecounter.R;
 
 import java.io.BufferedReader;
 import java.io.File;

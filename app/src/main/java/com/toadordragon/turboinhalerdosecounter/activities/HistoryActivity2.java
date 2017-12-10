@@ -1,8 +1,13 @@
-package com.toadordragon.turboinhalerdosecounter;
+package com.toadordragon.turboinhalerdosecounter.activities;
 
 import android.app.ListActivity;
 import android.database.Cursor;
 import android.os.Bundle;
+
+import com.toadordragon.turboinhalerdosecounter.DayHistoryCursorAdapter;
+import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
+import com.toadordragon.turboinhalerdosecounter.R;
+import com.toadordragon.turboinhalerdosecounter.RemoteFetchJSON;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

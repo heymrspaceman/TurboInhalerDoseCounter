@@ -1,4 +1,4 @@
-package com.toadordragon.turboinhalerdosecounter;
+package com.toadordragon.turboinhalerdosecounter.database;
 
 import android.provider.BaseColumns;
 
