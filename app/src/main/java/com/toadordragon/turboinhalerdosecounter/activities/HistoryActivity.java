@@ -18,14 +18,14 @@ import java.util.Iterator;
  * Created by thomas on 07-Mar-17.
  */
 
-public class HistoryActivity2 extends ListActivity {
+public class HistoryActivity extends ListActivity {
 
     DoseRecorderDBHelper doseRecorderDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.history2);
+        setContentView(R.layout.history);
 
         // Experiments
         // getHolidayDataFromWebServer_Json();
