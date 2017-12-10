@@ -1,15 +1,11 @@
 package com.toadordragon.turboinhalerdosecounter.activities;
 
-import android.app.ListActivity;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
-import com.toadordragon.turboinhalerdosecounter.DayHistoryCursorAdapter;
 import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
 import com.toadordragon.turboinhalerdosecounter.R;
 import com.toadordragon.turboinhalerdosecounter.RemoteFetchJSON;
-import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.HistoryFragment;
 
 import org.json.JSONArray;
@@ -28,7 +24,7 @@ public class HistoryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.history);
+        setContentView(R.layout.activity_history);
 
         // Check whether the activity is using the layout version with
         // the fragment_container FrameLayout. If so, we must add the first fragment

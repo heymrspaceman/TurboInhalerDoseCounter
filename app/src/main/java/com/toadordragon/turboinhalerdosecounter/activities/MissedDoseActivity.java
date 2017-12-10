@@ -85,7 +85,7 @@ public class MissedDoseActivity extends AppCompatActivity implements MissedDoseF
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.missed_dose);
+        setContentView(R.layout.activity_missed_dose);
 
         doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
 
