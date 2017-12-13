@@ -22,6 +22,7 @@ import com.toadordragon.turboinhalerdosecounter.CalendarWrapper;
 import com.toadordragon.turboinhalerdosecounter.DoseDateTime;
 import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
 import com.toadordragon.turboinhalerdosecounter.R;
+import com.toadordragon.turboinhalerdosecounter.services.DoseTakenBroadcastService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -54,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
             importIntentData(data);
         }
         RefreshDoses();
+        startCountdownService();
     }
 
     @Override
@@ -70,6 +72,14 @@ public class MainActivity extends AppCompatActivity {
                     exportDataPermissionGranted();
                 }
         }
+    }
+
+    private void startCountdownService() {
+        Intent startServiceIntent = new Intent(this, DoseTakenBroadcastService.class);
+        startServiceIntent.putExtra(DoseTakenBroadcastService.START_COUNTDOWN_ID, false);
+        startServiceIntent.putExtra(DoseTakenBroadcastService.COUNTDOWN_ELAPSED_SECONDS_ID, 0);
+        startService(startServiceIntent);
+        Log.i(TAG, "Started service - countdown not started");
     }
 
     private void importIntentData(Uri data) {

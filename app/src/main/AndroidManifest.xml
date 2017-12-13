@@ -2,9 +2,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.toadordragon.turboinhalerdosecounter">
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/> <!-- Required for importing -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/> <!-- Required for exporting -->
-    <uses-permission android:name="android.permission.INTERNET"/>  <!-- Required for export data to appear in Downloads -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> <!-- Required for importing -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> <!-- Required for exporting -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Required for export data to appear in Downloads -->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -19,18 +21,25 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="content"/>
-                <data android:scheme="file"/>
-                <data android:host="*"/>
-                <data android:mimeType="application/tsdcsv"/> <!-- for files exported by app on same device -->
-                <data android:mimeType="application/octet-stream"/> <!-- for files from another source (downloaded onto the device) -->
+
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="application/tsdcsv" /> <!-- for files exported by app on same device -->
+                <data android:mimeType="application/octet-stream" /> <!-- for files from another source (downloaded onto the device) -->
             </intent-filter>
         </activity>
-        <activity android:name=".activities.DoseTakenActivity"></activity>
-        <activity android:name=".activities.MissedDoseActivity"></activity>
-        <activity android:name=".activities.HistoryActivity"></activity>
+        <activity android:name=".activities.DoseTakenActivity" />
+        <activity android:name=".activities.MissedDoseActivity" />
+        <activity android:name=".activities.HistoryActivity" />
+
+        <service
+            android:name=".services.DoseTakenBroadcastService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>

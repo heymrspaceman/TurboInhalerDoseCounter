@@ -1,19 +1,22 @@
 package com.toadordragon.turboinhalerdosecounter.fragments;
 
-import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.NotificationCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.toadordragon.turboinhalerdosecounter.R;
+import com.toadordragon.turboinhalerdosecounter.services.DoseTakenBroadcastService;
 
 public class DoseTakenFragment extends Fragment {
+    private final static String TAG = "DoseTakenFragment";
 
     // Parameters
     private long elapsedSeconds;
@@ -22,7 +25,9 @@ public class DoseTakenFragment extends Fragment {
     // Non-fragment stuff
     private final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
     private final static String DOSES_TODAY_ID = "com.example.thomas.myapplication.DOSES_TODAY_ID";
-    CountDownTimer secondsTimer;
+
+    TextView timerTextView;
+    TextView timerInfoTextView;
 
     public DoseTakenFragment() {
         // Required empty public constructor
@@ -44,6 +49,65 @@ public class DoseTakenFragment extends Fragment {
             elapsedSeconds = getArguments().getLong(ELAPSED_SECONDS_ID);
             dosesToday = getArguments().getInt(DOSES_TODAY_ID);
         }
+
+        startCountdownService();
+    }
+
+    private void startCountdownService() {
+        Intent startServiceIntent = new Intent(getActivity(), DoseTakenBroadcastService.class);
+        startServiceIntent.putExtra(DoseTakenBroadcastService.START_COUNTDOWN_ID, true);
+        startServiceIntent.putExtra(DoseTakenBroadcastService.COUNTDOWN_ELAPSED_SECONDS_ID, elapsedSeconds);
+        getActivity().startService(startServiceIntent);
+        Log.i(TAG, "Sent start service intent to countdown service (should already be started) but this time with countdown start");
+    }
+
+    private BroadcastReceiver br = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getExtras() != null) {
+                long secondsUntilFinished = intent.getLongExtra("countdown", 0);
+                boolean complete = intent.getBooleanExtra("complete", false);
+                updateTime(secondsUntilFinished, complete);
+            }
+        }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getActivity().registerReceiver(br, new IntentFilter((DoseTakenBroadcastService.COUNTDOWN_BR)));
+        Log.i(TAG, "Registered broadcast receiver");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(br);
+        Log.i(TAG, "Unregistered broadcast receiver");
+    }
+
+    @Override
+    public void onStop() {
+        try {
+            getActivity().unregisterReceiver(br);
+        } catch (Exception e) {
+            // Receiver probably stopped in onPause
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.i(TAG, "Stopped service");
+        super.onDestroy();
+    }
+
+    private void updateTime(long secondsUntilFinished, boolean complete) {
+
+        timerTextView.setText(String.format(getString(R.string.timer_message), secondsUntilFinished / 60, secondsUntilFinished % 60));
+        if (complete) {
+            timerInfoTextView.setText(R.string.safe_dose_message);
+        }
     }
 
     @Override
@@ -52,42 +116,13 @@ public class DoseTakenFragment extends Fragment {
         // Inflate the layout for this fragment
         View thisView = inflater.inflate(R.layout.fragment_dose_taken, container, false);
 
-        final TextView doseMessageTextView = (TextView) thisView.findViewById(R.id.dose_message);
-        final TextView timerTextView = (TextView) thisView.findViewById(R.id.timer_message);
-        final TextView timerInfoTextView = (TextView) thisView.findViewById(R.id.timer_info_message);
+        TextView doseMessageTextView = (TextView) thisView.findViewById(R.id.dose_message);
+        timerTextView = (TextView) thisView.findViewById(R.id.timer_message);
+        timerInfoTextView = (TextView) thisView.findViewById(R.id.timer_info_message);
 
         doseMessageTextView.setText(String.format(getString(R.string.dose_message, dosesToday)));
 
         long countdownIntervalSeconds = (5 * 60) - elapsedSeconds;
-
-        secondsTimer = new CountDownTimer(countdownIntervalSeconds * 1000, 1000) {
-            public void onTick(long millisUntilFinished) {
-                long totalSeconds = millisUntilFinished / 1000;
-                long minutes = totalSeconds / 60;
-                long seconds = totalSeconds % 60;
-
-                timerTextView.setText(String.format(getString(R.string.timer_message), minutes, seconds));
-            }
-
-            public void onFinish() {
-                timerInfoTextView.setText(R.string.safe_dose_message);
-                timerTextView.setText(String.format(getString(R.string.timer_message), 0, 0));
-
-                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getActivity());
-                mBuilder.setSmallIcon(R.mipmap.ic_launcher_transparent);
-                mBuilder.setColor(getResources().getColor(R.color.colorDoseNotification));
-                mBuilder.setContentTitle(getString(R.string.app_name));
-
-                // Annoyingly this does not get re-centred
-                mBuilder.setContentText(getString(R.string.safe_dose_message));
-
-                NotificationManager mNotificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-
-                // mId allows you to update the notification later on.
-                int mId = 0;
-                mNotificationManager.notify(mId, mBuilder.build());
-            }
-        }.start();
 
         return thisView;
     }
@@ -100,6 +135,5 @@ public class DoseTakenFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        secondsTimer.cancel();
     }
 }
