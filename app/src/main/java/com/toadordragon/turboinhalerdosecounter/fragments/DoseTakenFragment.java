@@ -96,12 +96,6 @@ public class DoseTakenFragment extends Fragment {
         super.onStop();
     }
 
-    @Override
-    public void onDestroy() {
-        Log.i(TAG, "Stopped service");
-        super.onDestroy();
-    }
-
     private void updateTime(long secondsUntilFinished, boolean complete) {
 
         timerTextView.setText(String.format(getString(R.string.timer_message), secondsUntilFinished / 60, secondsUntilFinished % 60));
