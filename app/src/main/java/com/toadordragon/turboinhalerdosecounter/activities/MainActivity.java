@@ -2,7 +2,6 @@ package com.toadordragon.turboinhalerdosecounter.activities;
 
 import android.Manifest;
 import android.app.DownloadManager;
-import android.app.FragmentManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -296,7 +295,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
 
     public void showHistory() {
         CalendarWrapper calWrapper = new CalendarWrapper();
-        doseRecorderDb.addCount(new DoseDateTime(calWrapper));
         int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
         HistoryFragment newFragment = HistoryFragment.newInstance();
 
