@@ -2,6 +2,7 @@ package com.toadordragon.turboinhalerdosecounter.activities;
 
 import android.Manifest;
 import android.app.DownloadManager;
+import android.app.FragmentManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -24,6 +25,7 @@ import com.toadordragon.turboinhalerdosecounter.R;
 import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.HistoryFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.MainFragment;
+import com.toadordragon.turboinhalerdosecounter.fragments.MissedDoseFragment;
 import com.toadordragon.turboinhalerdosecounter.services.DoseTakenBroadcastService;
 
 import java.io.BufferedReader;
@@ -39,7 +41,7 @@ import java.util.Date;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
-public class MainActivity extends AppCompatActivity implements MainFragment.OnMainFragmentInteractionListener {
+public class MainActivity extends AppCompatActivity implements MainFragment.OnMainFragmentInteractionListener, MissedDoseFragment.OnMissedDoseListener {
     private static final String TAG = "MainActivity";
     public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
     public final static int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 98;
@@ -122,6 +124,57 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
     @Override
     public void onExport() {
         exportDataRequest();
+    }
+
+    @Override
+    public void onMissedDoseCancelled() {
+        getSupportFragmentManager().popBackStack();
+    }
+
+    @Override
+    public void onMissedDoseStarted(Calendar calTimePicker) {
+        Calendar calToday = Calendar.getInstance();
+        Calendar calTodayFiveMinsAgo = Calendar.getInstance();
+        calTodayFiveMinsAgo.set(Calendar.MINUTE, -5);
+
+        Date timeNow = calToday.getTime();
+        Date timeFiveMinsAgo = calTodayFiveMinsAgo.getTime();
+        Date missedDoseTime = calTimePicker.getTime();
+
+        // Check missed dose time is earlier than current time
+        if (timeNow.after(missedDoseTime)) {
+
+            // Record the dose
+            doseRecorderDb.addCount(new DoseDateTime(new CalendarWrapper(calTimePicker)));
+
+            // If missed dose time is within five minutes we want to display dose taken activity, otherwise we just go back to main activity
+            if (timeFiveMinsAgo.before(missedDoseTime)) {
+
+                long elapsedMilliseconds = timeNow.getTime() - missedDoseTime.getTime();
+                long elapsedSeconds = elapsedMilliseconds / 1000;
+                int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
+
+                DoseTakenFragment newFragment = DoseTakenFragment.newInstance(elapsedSeconds, dosesToday);
+
+                android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+                // Replace whatever is in the fragment_container view with this fragment,
+                // and add the transaction to the back stack so the user can navigate back
+                // TODO Hitting back during the countdown timer sends us back to the MissedDose fragment - don't know how to get around this
+                transaction.replace(R.id.fragmentMissedDose_container, newFragment);
+                transaction.addToBackStack(null);
+
+                // Commit the transaction
+                transaction.commit();
+            } else {
+                Context context = getApplicationContext();
+                Toast.makeText(getApplicationContext(), "Missed dose time recorded", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        } else {
+            Context context = getApplicationContext();
+            Toast.makeText(getApplicationContext(), "Missed dose time should be earlier than current time", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void startCountdownService() {
@@ -228,8 +281,17 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
     //TODO add info or help pages using https://developer.android.com/training/animation/screen-slide.html
 
     public void missedDose() {
-        Intent intent = new Intent(this, MissedDoseActivity.class);
-        startActivity(intent);
+        MissedDoseFragment newFragment = MissedDoseFragment.newInstance();
+
+        android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.fragmentMain_container, newFragment);
+        transaction.addToBackStack(null);
+
+        // Commit the transaction
+        transaction.commit();
     }
 
     public void showHistory() {

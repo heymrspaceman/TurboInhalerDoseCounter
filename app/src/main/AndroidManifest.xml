@@ -32,7 +32,6 @@
                 <data android:mimeType="application/octet-stream" /> <!-- for files from another source (downloaded onto the device) -->
             </intent-filter>
         </activity>
-        <activity android:name=".activities.MissedDoseActivity" />
 
         <service
             android:name=".services.DoseTakenBroadcastService"
