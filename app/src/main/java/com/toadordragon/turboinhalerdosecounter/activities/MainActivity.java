@@ -22,6 +22,9 @@ import com.toadordragon.turboinhalerdosecounter.CalendarWrapper;
 import com.toadordragon.turboinhalerdosecounter.DoseDateTime;
 import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
 import com.toadordragon.turboinhalerdosecounter.R;
+import com.toadordragon.turboinhalerdosecounter.fragments.HistoryFragment;
+import com.toadordragon.turboinhalerdosecounter.fragments.MainFragment;
+import com.toadordragon.turboinhalerdosecounter.fragments.MissedDoseFragment;
 import com.toadordragon.turboinhalerdosecounter.services.DoseTakenBroadcastService;
 
 import java.io.BufferedReader;
@@ -37,7 +40,7 @@ import java.util.Date;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainFragment.OnMainFragmentInteractionListener {
     private static final String TAG = "MainActivity";
     public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
     public final static int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 98;
@@ -49,19 +52,39 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Check whether the activity is using the layout version with
+        // the fragment_container FrameLayout. If so, we must add the first fragment
+        if (findViewById(R.id.fragmentMain_container) != null) {
+
+            // However, if we're being restored from a previous state,
+            // then we don't need to do anything and should return or else
+            // we could end up with overlapping fragments.
+            if (savedInstanceState != null) {
+                return;
+            }
+
+            // Create an instance of ExampleFragment
+            MainFragment firstFragment = new MainFragment();
+
+            // In case this activity was started with special instructions from an Intent,
+            // pass the Intent's extras to the fragment as arguments
+            firstFragment.setArguments(getIntent().getExtras());
+
+            // Add the fragment to the 'fragment_container' FrameLayout
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.fragmentMain_container, firstFragment).commit();
+        }
+
         Uri data = getIntent().getData();
         if (data != null) {
             getIntent().setData(null);
             importIntentData(data);
         }
-        RefreshDoses();
-        startCountdownService();
     }
 
     @Override
     public void onResume() {  // After a pause OR at startup
         super.onResume();
-        RefreshDoses();
     }
 
     @Override
@@ -72,6 +95,31 @@ public class MainActivity extends AppCompatActivity {
                     exportDataPermissionGranted();
                 }
         }
+    }
+
+    @Override
+    public void onTakeDose() {
+        takeDose();
+    }
+
+    @Override
+    public void onMissedDose() {
+        missedDose();
+    }
+
+    @Override
+    public void onHistory() {
+        showHistory();
+    }
+
+    @Override
+    public void onImport() {
+        importData();
+    }
+
+    @Override
+    public void onExport() {
+        exportDataRequest();
     }
 
     private void startCountdownService() {
@@ -158,8 +206,8 @@ public class MainActivity extends AppCompatActivity {
         doseSummaryTextView.setText(doseRecorderDb.getDoseTimesForDay(calWrapper));
     }
 
-    public void takeDose(View view) {
-        CalendarWrapper calWrapper =new CalendarWrapper();
+    public void takeDose() {
+        CalendarWrapper calWrapper = new CalendarWrapper();
         doseRecorderDb.addCount(new DoseDateTime(calWrapper));
 
         Intent intent = new Intent(this, DoseTakenActivity.class);
@@ -170,17 +218,17 @@ public class MainActivity extends AppCompatActivity {
 
     //TODO add info or help pages using https://developer.android.com/training/animation/screen-slide.html
 
-    public void missedDose(View view) {
+    public void missedDose() {
         Intent intent = new Intent(this, MissedDoseActivity.class);
         startActivity(intent);
     }
 
-    public void showHistory(View view) {
+    public void showHistory() {
         Intent intent = new Intent(this, HistoryActivity.class);
         startActivity(intent);
     }
 
-    public void exportDataRequest(View view) {
+    public void exportDataRequest() {
         // Check we have permissions
         int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permissionCheck == PackageManager.PERMISSION_DENIED) {
@@ -244,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void importData(View view) {
+    public void importData() {
         // Check we have permissions
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
