@@ -22,6 +22,7 @@ import com.toadordragon.turboinhalerdosecounter.DoseDateTime;
 import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
 import com.toadordragon.turboinhalerdosecounter.R;
 import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
+import com.toadordragon.turboinhalerdosecounter.fragments.HistoryFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.MainFragment;
 import com.toadordragon.turboinhalerdosecounter.services.DoseTakenBroadcastService;
 
@@ -232,8 +233,20 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
     }
 
     public void showHistory() {
-        Intent intent = new Intent(this, HistoryActivity.class);
-        startActivity(intent);
+        CalendarWrapper calWrapper = new CalendarWrapper();
+        doseRecorderDb.addCount(new DoseDateTime(calWrapper));
+        int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
+        HistoryFragment newFragment = HistoryFragment.newInstance();
+
+        android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.fragmentMain_container, newFragment);
+        transaction.addToBackStack(null);
+
+        // Commit the transaction
+        transaction.commit();
     }
 
     public void exportDataRequest() {

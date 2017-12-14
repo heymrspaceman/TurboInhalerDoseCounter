@@ -33,7 +33,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.MissedDoseActivity" />
-        <activity android:name=".activities.HistoryActivity" />
 
         <service
             android:name=".services.DoseTakenBroadcastService"
