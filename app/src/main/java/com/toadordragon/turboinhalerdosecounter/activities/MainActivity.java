@@ -14,7 +14,6 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,9 +21,8 @@ import com.toadordragon.turboinhalerdosecounter.CalendarWrapper;
 import com.toadordragon.turboinhalerdosecounter.DoseDateTime;
 import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
 import com.toadordragon.turboinhalerdosecounter.R;
-import com.toadordragon.turboinhalerdosecounter.fragments.HistoryFragment;
+import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.MainFragment;
-import com.toadordragon.turboinhalerdosecounter.fragments.MissedDoseFragment;
 import com.toadordragon.turboinhalerdosecounter.services.DoseTakenBroadcastService;
 
 import java.io.BufferedReader;
@@ -80,11 +78,14 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
             getIntent().setData(null);
             importIntentData(data);
         }
+
+        doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
     }
 
     @Override
     public void onResume() {  // After a pause OR at startup
         super.onResume();
+        doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
     }
 
     @Override
@@ -184,7 +185,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
     }
 
     private void RefreshDoses() {
-        doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
         CalendarWrapper calWrapper = new CalendarWrapper();
 
         final TextView doseMessageInfoTextView = (TextView) findViewById(R.id.dose_message_info);
@@ -209,10 +209,18 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
     public void takeDose() {
         CalendarWrapper calWrapper = new CalendarWrapper();
         doseRecorderDb.addCount(new DoseDateTime(calWrapper));
+        int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
+        DoseTakenFragment newFragment = DoseTakenFragment.newInstance(0, dosesToday);
 
-        Intent intent = new Intent(this, DoseTakenActivity.class);
-        intent.putExtra(ELAPSED_SECONDS_ID, 0);
-        startActivity(intent);
+        android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+
+        // Replace whatever is in the fragment_container view with this fragment,
+        // and add the transaction to the back stack so the user can navigate back
+        transaction.replace(R.id.fragmentMain_container, newFragment);
+        transaction.addToBackStack(null);
+
+        // Commit the transaction
+        transaction.commit();
     }
 
 
