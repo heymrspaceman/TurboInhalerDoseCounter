@@ -54,18 +54,12 @@ public class MainFragment extends Fragment implements View.OnClickListener {
         doseMessageInfoTextView = (TextView) thisView.findViewById(R.id.dose_message_info);
         lastDoseMessageInfoTextView = (TextView) thisView.findViewById(R.id.last_dose);
         doseSummaryTextView = (TextView) thisView.findViewById(R.id.dose_summary);
-        fragmentContainerView = thisView.findViewById(R.id.fragmentMain_container);
+        //fragmentContainerView = thisView.findViewById(R.id.fragmentMain_container);
 
         Button btnTakeDose = (Button) thisView.findViewById(R.id.mainTakeDoseBtn);
         Button btnMissedDose = (Button) thisView.findViewById(R.id.mainMissedDoseBtn);
-        Button btnMainHistory = (Button) thisView.findViewById(R.id.mainHistoryBtn);
-        Button btnImport= (Button) thisView.findViewById(R.id.mainImportBtn);
-        Button btnExport = (Button) thisView.findViewById(R.id.mainExportBtn);
         btnTakeDose.setOnClickListener(this);
         btnMissedDose.setOnClickListener(this);
-        btnMainHistory.setOnClickListener(this);
-        btnImport.setOnClickListener(this);
-        btnExport.setOnClickListener(this);
 
         RefreshDoses();
 
@@ -94,9 +88,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
     public interface OnMainFragmentInteractionListener {
         void onTakeDose();
         void onMissedDose();
-        void onHistory();
-        void onImport();
-        void onExport();
     }
 
     @Override
@@ -107,15 +98,6 @@ public class MainFragment extends Fragment implements View.OnClickListener {
                 break;
             case R.id.mainMissedDoseBtn:
                 mListener.onMissedDose();
-                break;
-            case R.id.mainHistoryBtn:
-                mListener.onHistory();
-                break;
-            case R.id.mainImportBtn:
-                mListener.onImport();
-                break;
-            case R.id.mainExportBtn:
-                mListener.onExport();
                 break;
         }
     }

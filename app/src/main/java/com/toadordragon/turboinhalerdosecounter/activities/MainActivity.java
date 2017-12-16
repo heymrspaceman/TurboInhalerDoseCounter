@@ -7,13 +7,23 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,11 +31,12 @@ import com.toadordragon.turboinhalerdosecounter.CalendarWrapper;
 import com.toadordragon.turboinhalerdosecounter.DoseDateTime;
 import com.toadordragon.turboinhalerdosecounter.database.DoseRecorderDBHelper;
 import com.toadordragon.turboinhalerdosecounter.R;
+import android.support.v4.app.Fragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.DoseTakenFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.HistoryFragment;
+import com.toadordragon.turboinhalerdosecounter.fragments.ImportExportFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.MainFragment;
 import com.toadordragon.turboinhalerdosecounter.fragments.MissedDoseFragment;
-import com.toadordragon.turboinhalerdosecounter.services.DoseTakenBroadcastService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -40,39 +51,56 @@ import java.util.Date;
 
 import static android.os.Environment.DIRECTORY_DOWNLOADS;
 
-public class MainActivity extends AppCompatActivity implements MainFragment.OnMainFragmentInteractionListener, MissedDoseFragment.OnMissedDoseListener {
+public class MainActivity extends AppCompatActivity implements MainFragment.OnMainFragmentInteractionListener,
+        MissedDoseFragment.OnMissedDoseListener, ImportExportFragment.OnImportExportListener {
     private static final String TAG = "MainActivity";
     public final static String ELAPSED_SECONDS_ID = "com.example.thomas.myapplication.ELAPSED_SECONDS_ID";
     public final static int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 98;
     public final static int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 99;
     DoseRecorderDBHelper doseRecorderDb;
+    private String[] menuTitles;
+    private DrawerLayout drawerLayout;
+    private ListView drawerList;
+    private ActionBarDrawerToggle drawerToggle;
+    private CharSequence drawerTitle;
+    private CharSequence mainTitle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Check whether the activity is using the layout version with
-        // the fragment_container FrameLayout. If so, we must add the first fragment
-        if (findViewById(R.id.fragmentMain_container) != null) {
+        menuTitles = getResources().getStringArray(R.array.menus_array);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawerList = (ListView) findViewById(R.id.left_drawer);
 
-            // However, if we're being restored from a previous state,
-            // then we don't need to do anything and should return or else
-            // we could end up with overlapping fragments.
-            if (savedInstanceState != null) {
-                return;
+        mainTitle = drawerTitle = getTitle();
+
+        drawerList.setAdapter(new ArrayAdapter<String>(this, R.layout.drawer_list_item, menuTitles));
+        drawerList.setOnItemClickListener(new DrawerItemClickListener());
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
+
+        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.drawer_open, R.string.drawer_close) {
+
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+                getSupportActionBar().setTitle(mainTitle);
+                invalidateOptionsMenu();
             }
 
-            // Create an instance of ExampleFragment
-            MainFragment firstFragment = new MainFragment();
+            public void onDrawerOpened(View view) {
+                super.onDrawerOpened(view);
+                getSupportActionBar().setTitle(drawerTitle);
+                invalidateOptionsMenu();
+            }
+        };
 
-            // In case this activity was started with special instructions from an Intent,
-            // pass the Intent's extras to the fragment as arguments
-            firstFragment.setArguments(getIntent().getExtras());
+        drawerLayout.setDrawerListener(drawerToggle);
 
-            // Add the fragment to the 'fragment_container' FrameLayout
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.fragmentMain_container, firstFragment).commit();
+        if (savedInstanceState == null) {
+            selectItem(0);
         }
 
         Uri data = getIntent().getData();
@@ -82,6 +110,85 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
         }
 
         doseRecorderDb = DoseRecorderDBHelper.getInstance(this);
+    }
+
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        drawerToggle.syncState();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        drawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        boolean drawerOpen = drawerLayout.isDrawerOpen(drawerList);
+        menu.findItem(R.id.menu_settings).setVisible(!drawerOpen);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (drawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
+
+int id = item.getItemId();
+
+        // Handle action buttons
+        switch(item.getItemId()) {
+            case R.id.menu_settings:
+                Log.i(TAG, "Open settings if there are any");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private class DrawerItemClickListener implements ListView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            selectItem(position);
+        }
+    }
+
+    private void selectItem(int position) {
+        Fragment newFragment = null;
+
+        // This will be a select
+        if (position == 1) {
+            newFragment = new HistoryFragment();
+        } else if (position == 2) {
+            newFragment = new ImportExportFragment();
+        } else {
+            newFragment = new MainFragment();
+        }
+
+        if (newFragment != null) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, newFragment).commit();
+
+            drawerList.setItemChecked(position, true);
+            setTitle(menuTitles[position]);
+            drawerLayout.closeDrawer(drawerList);
+        }
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        mainTitle = title;
+        getSupportActionBar().setTitle(mainTitle);
     }
 
     @Override
@@ -108,21 +215,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
     @Override
     public void onMissedDose() {
         missedDose();
-    }
-
-    @Override
-    public void onHistory() {
-        showHistory();
-    }
-
-    @Override
-    public void onImport() {
-        importData();
-    }
-
-    @Override
-    public void onExport() {
-        exportDataRequest();
     }
 
     @Override
@@ -154,17 +246,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
                 int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
 
                 DoseTakenFragment newFragment = DoseTakenFragment.newInstance(elapsedSeconds, dosesToday);
-
-                android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-                // Replace whatever is in the fragment_container view with this fragment,
-                // and add the transaction to the back stack so the user can navigate back
-                // TODO Hitting back during the countdown timer sends us back to the MissedDose fragment - don't know how to get around this
-                transaction.replace(R.id.fragmentMissedDose_container, newFragment);
-                transaction.addToBackStack(null);
-
-                // Commit the transaction
-                transaction.commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, newFragment).commit();
             } else {
                 Context context = getApplicationContext();
                 Toast.makeText(getApplicationContext(), "Missed dose time recorded", Toast.LENGTH_SHORT).show();
@@ -176,12 +258,16 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
         }
     }
 
-    private void startCountdownService() {
-        Intent startServiceIntent = new Intent(this, DoseTakenBroadcastService.class);
-        startServiceIntent.putExtra(DoseTakenBroadcastService.START_COUNTDOWN_ID, false);
-        startServiceIntent.putExtra(DoseTakenBroadcastService.COUNTDOWN_ELAPSED_SECONDS_ID, 0);
-        startService(startServiceIntent);
-        Log.i(TAG, "Started service - countdown not started");
+    @Override
+    public void onImportPressed()
+    {
+        importData();
+    }
+
+    @Override
+    public void onExportPressed()
+    {
+        exportDataRequest();
     }
 
     private void importIntentData(Uri data) {
@@ -264,49 +350,14 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnMa
         doseRecorderDb.addCount(new DoseDateTime(calWrapper));
         int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
         DoseTakenFragment newFragment = DoseTakenFragment.newInstance(0, dosesToday);
-
-        android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.fragmentMain_container, newFragment);
-        transaction.addToBackStack(null);
-
-        // Commit the transaction
-        transaction.commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, newFragment).commit();
     }
-
 
     //TODO add info or help pages using https://developer.android.com/training/animation/screen-slide.html
 
     public void missedDose() {
         MissedDoseFragment newFragment = MissedDoseFragment.newInstance();
-
-        android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.fragmentMain_container, newFragment);
-        transaction.addToBackStack(null);
-
-        // Commit the transaction
-        transaction.commit();
-    }
-
-    public void showHistory() {
-        CalendarWrapper calWrapper = new CalendarWrapper();
-        int dosesToday = doseRecorderDb.getDosesForDayCount(new CalendarWrapper());
-        HistoryFragment newFragment = HistoryFragment.newInstance();
-
-        android.support.v4.app.FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-
-        // Replace whatever is in the fragment_container view with this fragment,
-        // and add the transaction to the back stack so the user can navigate back
-        transaction.replace(R.id.fragmentMain_container, newFragment);
-        transaction.addToBackStack(null);
-
-        // Commit the transaction
-        transaction.commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.content_frame, newFragment).commit();
     }
 
     public void exportDataRequest() {
